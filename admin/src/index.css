@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-white text-slate-900 antialiased;
+}
+
+::selection {
+  @apply bg-brand-200;
+}
+
+.input {
+  @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm transition-shadow
+    placeholder:text-slate-400
+    focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30 disabled:bg-slate-100 disabled:text-slate-400;
+}
+
+.label {
+  @apply mb-1 block text-xs font-medium text-slate-600;
+}
+
+.btn {
+  @apply inline-flex min-h-[38px] items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium
+    transition-all duration-150 ease-out
+    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 focus-visible:ring-offset-1
+    active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100;
+}
+
+.btn-primary {
+  @apply btn bg-brand-600 text-white shadow-sm shadow-brand-900/10 hover:bg-brand-700 hover:shadow;
+}
+
+.btn-secondary {
+  @apply btn border border-slate-300 bg-white text-slate-700 shadow-sm hover:border-slate-400 hover:bg-slate-50;
+}
+
+.btn-danger {
+  @apply btn bg-red-600 text-white shadow-sm hover:bg-red-700;
+}
+
+.btn-ghost {
+  @apply btn text-slate-600 hover:bg-slate-100 active:scale-100;
+}
+
+.card {
+  @apply rounded-xl border border-slate-200/80 bg-white shadow-sm shadow-slate-900/[0.03];
+}
+
+.badge {
+  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium tracking-wide;
+}
+
+.rte-editable:empty:before {
+  content: attr(data-placeholder);
+  @apply text-slate-400;
+}
+
+.rte-content ul,
+.rte-editable ul {
+  @apply list-disc pl-5;
+}
+.rte-content ol,
+.rte-editable ol {
+  @apply list-decimal pl-5;
+}
+.rte-content a,
+.rte-editable a {
+  @apply text-brand-600 underline;
+}
+
+/* thin, unobtrusive scrollbar for the sidebar + any overflow panes */
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: theme('colors.slate.300') transparent;
+}
+.scroll-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scroll-thin::-webkit-scrollbar-thumb {
+  @apply rounded-full bg-slate-300;
+}
