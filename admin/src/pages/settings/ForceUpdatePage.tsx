@@ -68,8 +68,7 @@ function PlatformForm({ platform, existing }: { platform: Platform; existing?: F
 
   return (
     <form onSubmit={onSubmit} className="card space-y-4 p-5">
-      <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-        <span>{platform === 'android' ? '🤖' : '🍎'}</span>
+      <h2 className="text-sm font-semibold text-slate-900">
         {platform === 'android' ? 'Android' : 'iOS'}
       </h2>
 
