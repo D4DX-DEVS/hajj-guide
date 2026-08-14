@@ -14,9 +14,7 @@ export default function ChecklistTemplateListPage() {
           header: 'Category',
           cell: (item) => (
             <div>
-              <div className="font-medium text-slate-800">
-                {item.iconEmoji} {item.name.english || item.name.malayalam}
-              </div>
+              <div className="font-medium text-slate-800">{item.name.english || item.name.malayalam}</div>
               <div className="text-xs text-slate-500">{item.categoryKey}</div>
             </div>
           ),
@@ -31,9 +29,7 @@ export default function ChecklistTemplateListPage() {
           header: 'Category',
           cell: (item) => (
             <div>
-              <div className="font-medium text-slate-800">
-                {item.iconEmoji} {item.name.english || item.name.malayalam}
-              </div>
+              <div className="font-medium text-slate-800">{item.name.english || item.name.malayalam}</div>
               <div className="text-xs text-slate-500">{item.categoryKey}</div>
             </div>
           ),
@@ -47,9 +43,7 @@ export default function ChecklistTemplateListPage() {
                   .sort((a, b) => a.order - b.order)
                   .map((i) => (
                     <li key={i.key}>
-                      <div>
-                        {i.iconEmoji} {i.title.english || i.title.malayalam}
-                      </div>
+                      <div>{i.title.english || i.title.malayalam}</div>
                       {i.note && (i.note.english || i.note.malayalam) && (
                         <div className="text-xs text-slate-500">{i.note.english || i.note.malayalam}</div>
                       )}

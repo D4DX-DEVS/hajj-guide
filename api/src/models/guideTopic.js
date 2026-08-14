@@ -22,7 +22,15 @@ const schema = contentSchema({
   category: { type: String, trim: true, lowercase: true, default: null, index: true },
   mainTitle: { type: localized(true), required: true },
   sessions: { type: [sessionSchema], default: [] },
+  coverImageSource: { type: String, enum: ['url', 'upload'], default: 'url' },
   coverImage: { type: String, trim: true },
+  coverImageStorageKey: { type: String, trim: true },
+  videoSource: { type: String, enum: ['youtube', 'upload'], default: 'youtube' },
+  /** Full YouTube video URL (e.g. https://youtube.com/watch?v=...). Used when videoSource is 'youtube'. */
+  videoUrl: { type: String, trim: true },
+  /** Direct playable URL for an uploaded video file. Used when videoSource is 'upload'. */
+  videoFileUrl: { type: String, trim: true },
+  videoStorageKey: { type: String, trim: true },
   iconEmoji: { type: String, trim: true },
 });
 

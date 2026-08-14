@@ -15,12 +15,12 @@ const schema = z.object({
 
   FIREBASE_SERVICE_ACCOUNT: z.string().optional().default(''),
 
-  SPACES_KEY: z.string().optional().default(''),
-  SPACES_SECRET: z.string().optional().default(''),
-  SPACES_BUCKET: z.string().optional().default(''),
-  SPACES_REGION: z.string().optional().default('blr1'),
-  SPACES_ENDPOINT: z.string().optional().default(''),
-  SPACES_CDN_URL: z.string().optional().default(''),
+  DO_SPACES_KEY: z.string().optional().default(''),
+  DO_SPACES_SECRET: z.string().optional().default(''),
+  DO_SPACES_BUCKET: z.string().optional().default(''),
+  DO_SPACES_ENDPOINT: z.string().optional().default(''),
+  DO_SPACES_CDN_ENDPOINT: z.string().optional().default(''),
+  DO_SPACES_FOLDER: z.string().optional().default(''),
 
   RATE_LIMIT_PUBLIC: z.coerce.number().int().positive().default(60),
   RATE_LIMIT_USER: z.coerce.number().int().positive().default(120),
@@ -42,7 +42,7 @@ export const env = {
   isDev: raw.NODE_ENV === 'development',
   corsOrigins: raw.CORS_ORIGINS === '*' ? '*' : raw.CORS_ORIGINS.split(',').map((s) => s.trim()).filter(Boolean),
   firebaseEnabled: Boolean(raw.FIREBASE_SERVICE_ACCOUNT),
-  storageEnabled: Boolean(raw.SPACES_KEY && raw.SPACES_SECRET && raw.SPACES_BUCKET && raw.SPACES_ENDPOINT),
+  storageEnabled: Boolean(raw.DO_SPACES_KEY && raw.DO_SPACES_SECRET && raw.DO_SPACES_BUCKET && raw.DO_SPACES_ENDPOINT),
 };
 
 export default env;

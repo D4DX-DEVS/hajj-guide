@@ -10,9 +10,15 @@ const schema = contentSchema({
   description: { type: localized(false) },
   instructions: { type: [localized(true)], default: [] },
   iconEmoji: { type: String, trim: true },
+  imageSource: { type: String, enum: ['url', 'upload'], default: 'url' },
   imageUrl: { type: String, trim: true },
-  /** YouTube video ID, not a full URL — the app builds the embed itself. */
+  imageStorageKey: { type: String, trim: true },
+  videoSource: { type: String, enum: ['youtube', 'upload'], default: 'youtube' },
+  /** Full YouTube video URL (e.g. https://youtube.com/watch?v=...). Used when videoSource is 'youtube'. */
   videoUrl: { type: String, trim: true },
+  /** Direct playable URL for an uploaded video file. Used when videoSource is 'upload'. */
+  videoFileUrl: { type: String, trim: true },
+  videoStorageKey: { type: String, trim: true },
   hasTawafLink: { type: Boolean, default: false },
   hasSaiLink: { type: Boolean, default: false },
   duaIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Dua' }],

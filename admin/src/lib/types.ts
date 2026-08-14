@@ -30,9 +30,13 @@ export interface RitualStep extends ContentBase {
   title: Localized;
   description?: Localized;
   instructions: Localized[];
-  iconEmoji?: string;
+  imageSource?: 'url' | 'upload';
   imageUrl?: string;
+  imageStorageKey?: string;
+  videoSource?: 'youtube' | 'upload';
   videoUrl?: string;
+  videoFileUrl?: string;
+  videoStorageKey?: string;
   hasTawafLink: boolean;
   hasSaiLink: boolean;
   duaIds: string[];
@@ -60,8 +64,13 @@ export interface GuideTopic extends ContentBase {
   category?: string | null;
   mainTitle: Localized;
   sessions: GuideTopicSession[];
+  coverImageSource?: 'url' | 'upload';
   coverImage?: string;
-  iconEmoji?: string;
+  coverImageStorageKey?: string;
+  videoSource?: 'youtube' | 'upload';
+  videoUrl?: string;
+  videoFileUrl?: string;
+  videoStorageKey?: string;
 }
 
 export interface TawafDua extends ContentBase {
@@ -89,14 +98,12 @@ export interface ChecklistItem {
   key: string;
   title: Localized;
   note?: Localized;
-  iconEmoji?: string;
   order: number;
 }
 
 export interface ChecklistTemplate extends ContentBase {
   categoryKey: string;
   name: Localized;
-  iconEmoji?: string;
   items: ChecklistItem[];
 }
 

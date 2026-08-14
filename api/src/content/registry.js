@@ -56,8 +56,13 @@ const ritualStepSchema = z.object({
   description: locOptional,
   instructions: z.array(locRequired).optional(),
   iconEmoji: z.string().trim().optional(),
+  imageSource: z.enum(['url', 'upload']).optional(),
   imageUrl: z.string().url().optional().or(z.literal('')),
-  videoUrl: z.string().trim().optional(),
+  imageStorageKey: z.string().trim().optional(),
+  videoSource: z.enum(['youtube', 'upload']).optional(),
+  videoUrl: z.string().trim().url().optional().or(z.literal('')),
+  videoFileUrl: z.string().url().optional().or(z.literal('')),
+  videoStorageKey: z.string().trim().optional(),
   hasTawafLink: z.boolean().optional(),
   hasSaiLink: z.boolean().optional(),
   duaIds: z.array(objectId).optional(),
@@ -92,7 +97,13 @@ const guideTopicSchema = z.object({
   category: optionalCategoryKey,
   mainTitle: locRequired,
   sessions: z.array(guideTopicSessionSchema).optional(),
+  coverImageSource: z.enum(['url', 'upload']).optional(),
   coverImage: z.string().url().optional().or(z.literal('')),
+  coverImageStorageKey: z.string().trim().optional(),
+  videoSource: z.enum(['youtube', 'upload']).optional(),
+  videoUrl: z.string().trim().url().optional().or(z.literal('')),
+  videoFileUrl: z.string().url().optional().or(z.literal('')),
+  videoStorageKey: z.string().trim().optional(),
   iconEmoji: z.string().trim().optional(),
 });
 
@@ -122,7 +133,8 @@ const checklistTemplateSchema = z.object({
   categoryKey: z
     .string()
     .trim()
-    .regex(/^[a-z0-9_-]+$/, 'categoryKey must be lowercase kebab/snake case'),
+    .regex(/^[a-z0-9_-]+$/, 'categoryKey must be lowercase kebab/snake case')
+    .optional(),
   name: locRequired,
   iconEmoji: z.string().trim().optional(),
   items: z

@@ -6,11 +6,19 @@ import ApiError from '../utils/ApiError.js';
 
 let client = null;
 
+function deriveRegion(endpoint) {
+  try {
+    return new URL(endpoint).hostname.split('.')[0] || 'us-east-1';
+  } catch {
+    return 'us-east-1';
+  }
+}
+
 if (env.storageEnabled) {
   client = new S3Client({
-    region: env.SPACES_REGION,
-    endpoint: env.SPACES_ENDPOINT,
-    credentials: { accessKeyId: env.SPACES_KEY, secretAccessKey: env.SPACES_SECRET },
+    region: deriveRegion(env.DO_SPACES_ENDPOINT),
+    endpoint: env.DO_SPACES_ENDPOINT,
+    credentials: { accessKeyId: env.DO_SPACES_KEY, secretAccessKey: env.DO_SPACES_SECRET },
     forcePathStyle: false,
   });
 }
@@ -18,9 +26,9 @@ if (env.storageEnabled) {
 export const storageReady = () => Boolean(client);
 
 function publicUrl(key) {
-  if (env.SPACES_CDN_URL) return `${env.SPACES_CDN_URL.replace(/\/$/, '')}/${key}`;
-  const host = env.SPACES_ENDPOINT.replace(/^https?:\/\//, '');
-  return `https://${env.SPACES_BUCKET}.${host}/${key}`;
+  if (env.DO_SPACES_CDN_ENDPOINT) return `${env.DO_SPACES_CDN_ENDPOINT.replace(/\/$/, '')}/${key}`;
+  const host = env.DO_SPACES_ENDPOINT.replace(/^https?:\/\//, '');
+  return `https://${env.DO_SPACES_BUCKET}.${host}/${key}`;
 }
 
 /**
@@ -31,11 +39,12 @@ export async function uploadFile(file, folder = 'uploads') {
   if (!client) throw ApiError.unavailable('Object storage is not configured on this server');
 
   const ext = path.extname(file.originalname).toLowerCase();
-  const key = `${folder}/${Date.now()}-${crypto.randomBytes(8).toString('hex')}${ext}`;
+  const prefix = env.DO_SPACES_FOLDER ? `${env.DO_SPACES_FOLDER}/${folder}` : folder;
+  const key = `${prefix}/${Date.now()}-${crypto.randomBytes(8).toString('hex')}${ext}`;
 
   await client.send(
     new PutObjectCommand({
-      Bucket: env.SPACES_BUCKET,
+      Bucket: env.DO_SPACES_BUCKET,
       Key: key,
       Body: file.buffer,
       ContentType: file.mimetype,
@@ -49,7 +58,7 @@ export async function uploadFile(file, folder = 'uploads') {
 
 export async function deleteFile(key) {
   if (!client) throw ApiError.unavailable('Object storage is not configured on this server');
-  await client.send(new DeleteObjectCommand({ Bucket: env.SPACES_BUCKET, Key: key }));
+  await client.send(new DeleteObjectCommand({ Bucket: env.DO_SPACES_BUCKET, Key: key }));
 }
 
 export default { storageReady, uploadFile, deleteFile };

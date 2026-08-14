@@ -6,7 +6,6 @@ import { z } from 'zod';
 import { useContentSave } from '../../lib/useContentSave';
 import type { ChecklistTemplate } from '../../lib/types';
 import FormShell from '../../components/content/FormShell';
-import TextField from '../../components/fields/TextField';
 import NumberField from '../../components/fields/NumberField';
 import Toggle from '../../components/fields/Toggle';
 import LocalizedInput from '../../components/fields/LocalizedInput';
@@ -25,17 +24,11 @@ const itemSchema = z.object({
     .regex(/^[a-z0-9_-]+$/, 'Lowercase letters, numbers, hyphens and underscores only'),
   title: locRequired,
   note: locSchema.optional(),
-  iconEmoji: z.string().optional(),
   order: z.coerce.number().int().default(0),
 });
 
 const schema = z.object({
-  categoryKey: z
-    .string()
-    .trim()
-    .regex(/^[a-z0-9_-]+$/, 'Lowercase letters, numbers, hyphens and underscores only'),
   name: locRequired,
-  iconEmoji: z.string().optional(),
   order: z.coerce.number().int().default(0),
   items: z.array(itemSchema),
   isPublished: z.boolean(),
@@ -43,10 +36,11 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
+/** Item key is never shown/edited in the UI — generated once, kept stable so pilgrims' tick state stays valid. */
+const generateItemKey = () => `item-${crypto.randomUUID().slice(0, 8)}`;
+
 const defaults: FormValues = {
-  categoryKey: '',
   name: { malayalam: '', english: '', arabic: '' },
-  iconEmoji: '',
   order: 0,
   items: [],
   isPublished: false,
@@ -69,9 +63,7 @@ export default function ChecklistTemplateFormPage() {
   useEffect(() => {
     if (item) {
       reset({
-        categoryKey: item.categoryKey,
         name: item.name,
-        iconEmoji: item.iconEmoji || '',
         order: item.order,
         items: item.items,
         isPublished: item.isPublished,
@@ -89,18 +81,8 @@ export default function ChecklistTemplateFormPage() {
       submitting={saving}
       loading={!isNew && isLoading}
     >
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="sm:col-span-2">
-          <TextField
-            label="Category key"
-            name="categoryKey"
-            register={register}
-            error={errors.categoryKey}
-            hint={!isNew ? 'Changing this does not move pilgrims’ saved progress' : undefined}
-          />
-        </div>
+      <div className="max-w-[160px]">
         <NumberField label="Order" name="order" register={register} />
-        <TextField label="Icon emoji" name="iconEmoji" register={register} placeholder="📄" />
       </div>
 
       <LocalizedInput label="Category name" name="name" register={register} errors={errors} />
@@ -111,14 +93,12 @@ export default function ChecklistTemplateFormPage() {
           <button
             type="button"
             className="btn-secondary"
-            onClick={() => append({ key: '', title: { malayalam: '', english: '', arabic: '' }, iconEmoji: '', order: fields.length })}
+            onClick={() =>
+              append({ key: generateItemKey(), title: { malayalam: '', english: '', arabic: '' }, order: fields.length })
+            }
           >
             + Add item
           </button>
-        </div>
-        <div className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-700">
-          Item <span className="font-mono">key</span> is what a pilgrim's tick state references — renaming an existing
-          key unticks it for everyone who already checked it off. Safe to add new keys or edit titles freely.
         </div>
         <div className="mt-3 space-y-4">
           {fields.map((field, index) => (
@@ -129,11 +109,8 @@ export default function ChecklistTemplateFormPage() {
                   Remove
                 </button>
               </div>
-              <div className="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <div className="sm:col-span-2">
-                  <TextField label="Key" name={`items.${index}.key`} register={register} error={errors.items?.[index]?.key as any} />
-                </div>
-                <TextField label="Icon emoji" name={`items.${index}.iconEmoji`} register={register} />
+              <input type="hidden" {...register(`items.${index}.key`)} />
+              <div className="mb-3 max-w-[160px]">
                 <NumberField label="Order" name={`items.${index}.order`} register={register} />
               </div>
               <LocalizedInput label="Title" name={`items.${index}.title`} register={register} errors={errors} />

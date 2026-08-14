@@ -116,6 +116,46 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   return { data: envelope.data, meta: envelope.meta };
 }
 
+/** Same as `api.upload`, but reports 0-100 upload progress via XHR (fetch has no upload-progress event). */
+export function uploadWithProgress<T>(
+  path: string,
+  form: FormData,
+  onProgress?: (percent: number) => void,
+): Promise<{ data: T }> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', buildUrl(path));
+
+    const token = getAccessToken();
+    if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
+    };
+
+    xhr.onload = () => {
+      let body: ApiEnvelope<T> | ApiErrorBody | null = null;
+      try {
+        body = JSON.parse(xhr.responseText);
+      } catch {
+        /* non-JSON response, fall through to status check below */
+      }
+
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve({ data: (body as ApiEnvelope<T> | null)?.data as T });
+      } else {
+        if (xhr.status === 401) clearTokens();
+        const err = body as ApiErrorBody | null;
+        reject(new ApiError(xhr.status, err?.error?.message || `Request failed (${xhr.status})`, err?.error?.details));
+      }
+    };
+
+    xhr.onerror = () => reject(new ApiError(0, 'Network error during upload'));
+
+    xhr.send(form);
+  });
+}
+
 export const api = {
   get: <T>(path: string, query?: RequestOptions['query']) => apiRequest<T>(path, { method: 'GET', query }),
   post: <T>(path: string, body?: unknown) => apiRequest<T>(path, { method: 'POST', body }),
@@ -123,6 +163,7 @@ export const api = {
   put: <T>(path: string, body?: unknown) => apiRequest<T>(path, { method: 'PUT', body }),
   delete: <T>(path: string, query?: RequestOptions['query']) => apiRequest<T>(path, { method: 'DELETE', query }),
   upload: <T>(path: string, form: FormData) => apiRequest<T>(path, { method: 'POST', body: form, isForm: true }),
+  uploadWithProgress,
   skipAuth: {
     post: <T>(path: string, body?: unknown) => apiRequest<T>(path, { method: 'POST', body, skipAuth: true }),
   },

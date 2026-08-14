@@ -1,5 +1,9 @@
+import crypto from 'node:crypto';
 import mongoose from 'mongoose';
 import { contentSchema, localized } from './shared.js';
+
+/** categoryKey is an internal identifier only — the admin form no longer asks for one. */
+const generateCategoryKey = () => `category-${crypto.randomBytes(4).toString('hex')}`;
 
 /**
  * One document per category. `items[].key` is the stable identifier that
@@ -18,7 +22,7 @@ const itemSchema = new mongoose.Schema(
 );
 
 const schema = contentSchema({
-  categoryKey: { type: String, required: true, trim: true },
+  categoryKey: { type: String, required: true, trim: true, default: generateCategoryKey },
   name: { type: localized(true), required: true },
   iconEmoji: { type: String, trim: true },
   items: { type: [itemSchema], default: [] },

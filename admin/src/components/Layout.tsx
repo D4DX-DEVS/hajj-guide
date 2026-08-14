@@ -56,7 +56,7 @@ export default function Layout() {
       >
         <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
           <div className="flex items-center gap-2">
-            <span aria-hidden className="text-lg">🕋</span>
+            <img src="/home.png" alt="Hajj &amp; Umrah Guide" className="h-8 w-8 shrink-0 rounded-lg object-cover" />
             <div>
               <div className="text-sm font-semibold text-white">Hajj &amp; Umrah Guide</div>
               <div className="text-xs text-brand-300">Admin panel</div>

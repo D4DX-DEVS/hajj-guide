@@ -3,6 +3,20 @@ export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
+      fontFamily: {
+        // Malayalam glyphs aren't covered by system UI fonts (e.g. Segoe UI), so the browser
+        // falls through to Noto Sans Malayalam for those code points while Latin text is untouched.
+        sans: [
+          'ui-sans-serif',
+          'system-ui',
+          '"Noto Sans Malayalam"',
+          'sans-serif',
+          '"Apple Color Emoji"',
+          '"Segoe UI Emoji"',
+          '"Segoe UI Symbol"',
+          '"Noto Color Emoji"',
+        ],
+      },
       colors: {
         // Gold/olive accent, lifted from the Kaaba-at-night moodboard.
         brand: {
