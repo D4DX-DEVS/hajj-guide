@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { useAuth } from '../lib/auth';
 import { errorMessage } from '../lib/toast';
 
@@ -80,14 +80,10 @@ export default function LoginPage() {
                   Email
                 </label>
                 <div className="relative">
-                  <FiMail
-                    className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-                    size={17}
-                  />
                   <input
                     id="email"
                     type="email"
-                    className="input py-2.5 pl-10 text-base"
+                    className="input py-2.5 text-base"
                     autoComplete="username"
                     required
                     value={email}
@@ -101,14 +97,10 @@ export default function LoginPage() {
                   Password
                 </label>
                 <div className="relative">
-                  <FiLock
-                    className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-                    size={17}
-                  />
                   <input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
-                    className="input py-2.5 pl-10 pr-10 text-base"
+                    className="input py-2.5 pr-10 text-base"
                     autoComplete="current-password"
                     required
                     value={password}
