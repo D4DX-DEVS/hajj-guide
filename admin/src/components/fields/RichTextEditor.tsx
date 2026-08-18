@@ -64,7 +64,10 @@ const TOOLBAR: { cmd: string; label: string; glyph: string; className?: string }
 /** Lightweight WYSIWYG editor (bold/italic/underline/lists/link) storing raw HTML — no external dependency. */
 export default function RichTextEditor({ value, onChange, dir = 'auto', rows = 4, placeholder }: RichTextEditorProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const lastEmitted = useRef(value);
+  // Starts as `null` (never equal to a real string, even '') so the first effect run always
+  // syncs the DOM on mount — the contentEditable div itself starts empty regardless of `value`
+  // (e.g. an existing item's saved HTML loading after a `reset()`), so mount must not be skipped.
+  const lastEmitted = useRef<string | null>(null);
 
   // Only push `value` into the DOM when it changed from outside (e.g. form reset on load) —
   // never while the user is actively typing, or the caret would jump to the start on every keystroke.

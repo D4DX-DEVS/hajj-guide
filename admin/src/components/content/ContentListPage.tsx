@@ -296,8 +296,11 @@ export default function ContentListPage<T extends { id: string; isPublished: boo
       />
 
       {viewingItem && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-ink-900/50 p-4 backdrop-blur-sm">
-          <div className="card max-h-[90vh] w-full max-w-2xl overflow-y-auto p-5 shadow-xl">
+        <div
+          className="fixed inset-0 z-40 flex items-center justify-center bg-ink-900/50 p-4 backdrop-blur-sm"
+          onClick={() => setViewingItem(null)}
+        >
+          <div className="card max-h-[90vh] w-full max-w-2xl overflow-y-auto p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-sm font-semibold text-slate-900">{title.replace(/s$/, '')} details</h3>
@@ -313,15 +316,6 @@ export default function ContentListPage<T extends { id: string; isPublished: boo
                   <div className="whitespace-pre-wrap text-sm text-slate-800">{col.cell(viewingItem)}</div>
                 </div>
               ))}
-            </div>
-
-            <div className="mt-5 flex justify-end gap-2 border-t border-slate-100 pt-4">
-              <Link to={editHref(viewingItem)} className="btn-secondary">
-                Edit
-              </Link>
-              <button className="btn-primary" onClick={() => setViewingItem(null)}>
-                Close
-              </button>
             </div>
           </div>
         </div>

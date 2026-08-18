@@ -15,7 +15,9 @@ export default function ChecklistTemplateListPage() {
           cell: (item) => (
             <div>
               <div className="font-medium text-slate-800">{item.name.english || item.name.malayalam}</div>
-              <div className="text-xs text-slate-500">{item.categoryKey}</div>
+              {item.name.english && item.name.malayalam && (
+                <div className="text-xs text-slate-500">{item.name.malayalam}</div>
+              )}
             </div>
           ),
         },
@@ -30,7 +32,9 @@ export default function ChecklistTemplateListPage() {
           cell: (item) => (
             <div>
               <div className="font-medium text-slate-800">{item.name.english || item.name.malayalam}</div>
-              <div className="text-xs text-slate-500">{item.categoryKey}</div>
+              {item.name.english && item.name.malayalam && (
+                <div className="text-xs text-slate-500">{item.name.malayalam}</div>
+              )}
             </div>
           ),
         },

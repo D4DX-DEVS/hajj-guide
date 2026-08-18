@@ -33,7 +33,9 @@ export default function GuideTopicsListPage() {
           cell: (item) => (
             <div>
               <div className="font-medium text-slate-800">{item.mainTitle?.english || item.mainTitle?.malayalam || '(untitled)'}</div>
-              <div className="text-xs text-slate-500">/{item.slug}</div>
+              {item.mainTitle?.english && item.mainTitle?.malayalam && (
+                <div className="text-xs text-slate-500">{item.mainTitle.malayalam}</div>
+              )}
             </div>
           ),
         },
@@ -43,7 +45,14 @@ export default function GuideTopicsListPage() {
         },
         {
           header: 'Category',
-          cell: (item) => (item.category ? <span className="badge bg-slate-100 text-slate-600">{item.category}</span> : <span className="text-xs text-slate-400">—</span>),
+          cell: (item) =>
+            item.category ? (
+              <span className="badge bg-slate-100 text-slate-600">
+                {categoryOptions.find((o) => o.value === item.category)?.label || item.category}
+              </span>
+            ) : (
+              <span className="text-xs text-slate-400">—</span>
+            ),
         },
       ]}
       detailFields={[
@@ -52,7 +61,9 @@ export default function GuideTopicsListPage() {
           cell: (item) => (
             <div className="space-y-0.5">
               <div>{item.mainTitle?.english || item.mainTitle?.malayalam || '(untitled)'}</div>
-              <div className="text-xs text-slate-500">/{item.slug}</div>
+              {item.mainTitle?.english && item.mainTitle?.malayalam && (
+                <div className="text-xs text-slate-500">{item.mainTitle.malayalam}</div>
+              )}
             </div>
           ),
         },
@@ -62,7 +73,7 @@ export default function GuideTopicsListPage() {
         },
         {
           header: 'Category',
-          cell: (item) => item.category || '—',
+          cell: (item) => categoryOptions.find((o) => o.value === item.category)?.label || item.category || '—',
         },
         {
           header: 'Sessions',

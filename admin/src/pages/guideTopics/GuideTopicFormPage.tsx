@@ -189,12 +189,7 @@ export default function GuideTopicFormPage() {
       <LocalizedInput label="Main title" name="mainTitle" register={register} errors={errors} />
 
       <div>
-        <div className="mb-1.5 flex items-center justify-between">
-          <label className="label mb-0">Sessions</label>
-          <button type="button" className="btn-secondary" onClick={() => append(emptySession)}>
-            + Add session
-          </button>
-        </div>
+        <label className="label mb-1.5">Sessions</label>
         <div className="rounded-md bg-slate-50 px-3 py-2 text-xs text-slate-500">
           Session title is optional — a session can be just a description.
         </div>
@@ -229,6 +224,9 @@ export default function GuideTopicFormPage() {
             </div>
           ))}
           {fields.length === 0 && <p className="mt-3 text-sm text-slate-400">No sessions yet.</p>}
+          <button type="button" className="btn-secondary" onClick={() => append(emptySession)}>
+            + Add session
+          </button>
         </div>
       </div>
 
