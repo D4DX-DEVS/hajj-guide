@@ -15,18 +15,14 @@ import LocalizedInput from '../../components/fields/LocalizedInput';
 import RelationSelect from '../../components/fields/RelationSelect';
 
 const locSchema = z.object({ malayalam: z.string().optional(), english: z.string().optional(), arabic: z.string().optional() });
-const locRequired = z.object({
-  malayalam: z.string().min(1, 'Malayalam is required'),
-  english: z.string().optional(),
-  arabic: z.string().optional(),
-});
 
 const schema = z.object({
-  title: locRequired,
-  arabicText: z.string().min(1, 'Arabic text is required'),
+  title: locSchema,
+  arabicText: z.string().optional(),
   transliteration: locSchema.optional(),
   meaning: locSchema.optional(),
-  category: z.string().min(1, 'Category is required'),
+  description: locSchema.optional(),
+  category: z.string().optional(),
   ritualType: z.enum(['hajj', 'umrah', 'both']),
   ritualStepId: z.string().nullable(),
   audioId: z.string().nullable(),
@@ -41,6 +37,7 @@ const defaults: FormValues = {
   arabicText: '',
   transliteration: { malayalam: '', english: '', arabic: '' },
   meaning: { malayalam: '', english: '', arabic: '' },
+  description: { malayalam: '', english: '', arabic: '' },
   category: 'general',
   ritualType: 'both',
   ritualStepId: null,
@@ -71,6 +68,7 @@ export default function DuaFormPage() {
         arabicText: item.arabicText,
         transliteration: item.transliteration || { malayalam: '', english: '', arabic: '' },
         meaning: item.meaning || { malayalam: '', english: '', arabic: '' },
+        description: item.description || { malayalam: '', english: '', arabic: '' },
         category: item.category,
         ritualType: item.ritualType,
         ritualStepId: item.ritualStepId,
@@ -91,10 +89,11 @@ export default function DuaFormPage() {
       submitting={saving}
       loading={!isNew && isLoading}
     >
-      <LocalizedInput label="Title" name="title" register={register} errors={errors} />
+      <LocalizedInput label="Title" name="title" register={register} errors={errors} required={false} />
       <TextField label="Arabic text" name="arabicText" register={register} error={errors.arabicText} dir="rtl" textarea />
       <LocalizedInput label="Transliteration" name="transliteration" register={register} errors={errors} required={false} />
       <LocalizedInput label="Meaning" name="meaning" register={register} errors={errors} textarea required={false} />
+      <LocalizedInput label="Description" name="description" register={register} errors={errors} textarea required={false} />
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <SelectField label="Category" name="category" register={register} options={categoryOptions} />

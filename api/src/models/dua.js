@@ -2,10 +2,11 @@ import mongoose from 'mongoose';
 import { contentSchema, localized, RITUAL_TYPES_WITH_BOTH } from './shared.js';
 
 const schema = contentSchema({
-  title: { type: localized(true), required: true },
-  arabicText: { type: String, required: true, trim: true },
+  title: { type: localized(false) },
+  arabicText: { type: String, trim: true },
   transliteration: { type: localized(false) },
   meaning: { type: localized(false) },
+  description: { type: localized(false) },
   // Free-text key into the `categories` collection (group: 'dua') rather than a fixed enum,
   // so new categories can be added from the admin panel without a code change.
   category: { type: String, trim: true, lowercase: true, default: 'general', index: true },
