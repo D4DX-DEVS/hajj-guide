@@ -88,18 +88,7 @@ export default function ChecklistTemplateFormPage() {
       <LocalizedInput label="Category name" name="name" register={register} errors={errors} />
 
       <div>
-        <div className="mb-1.5 flex items-center justify-between">
-          <label className="label mb-0">Items</label>
-          <button
-            type="button"
-            className="btn-secondary"
-            onClick={() =>
-              append({ key: generateItemKey(), title: { malayalam: '', english: '', arabic: '' }, order: fields.length })
-            }
-          >
-            + Add item
-          </button>
-        </div>
+        <label className="label mb-1.5">Items</label>
         <div className="mt-3 space-y-4">
           {fields.map((field, index) => (
             <div key={field.id} className="rounded-md border border-slate-200 p-3">
@@ -117,6 +106,15 @@ export default function ChecklistTemplateFormPage() {
             </div>
           ))}
           {fields.length === 0 && <p className="mt-3 text-sm text-slate-400">No items yet.</p>}
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() =>
+              append({ key: generateItemKey(), title: { malayalam: '', english: '', arabic: '' }, order: fields.length })
+            }
+          >
+            + Add item
+          </button>
         </div>
       </div>
 

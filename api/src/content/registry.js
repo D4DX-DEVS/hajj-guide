@@ -70,10 +70,11 @@ const ritualStepSchema = z.object({
 
 const duaSchema = z.object({
   ...contentBase,
-  title: locRequired,
-  arabicText: z.string().trim().min(1),
+  title: locOptional,
+  arabicText: z.string().trim().optional(),
   transliteration: locOptional,
   meaning: locOptional,
+  description: locOptional,
   category: categoryKey.optional(),
   ritualType: z.enum(RITUAL_TYPES_WITH_BOTH).optional(),
   ritualStepId: objectId.nullable().optional(),

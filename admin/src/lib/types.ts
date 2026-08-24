@@ -47,6 +47,7 @@ export interface Dua extends ContentBase {
   arabicText: string;
   transliteration?: Localized;
   meaning?: Localized;
+  description?: Localized;
   category: DuaCategory;
   ritualType: RitualTypeOrBoth;
   ritualStepId: string | null;

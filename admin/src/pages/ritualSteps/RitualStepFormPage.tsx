@@ -189,16 +189,7 @@ export default function RitualStepFormPage() {
       <LocalizedInput label="Description" name="description" register={register} control={control} errors={errors} richText required={false} />
 
       <div>
-        <div className="mb-1.5 flex items-center justify-between">
-          <label className="label mb-0">Instructions</label>
-          <button
-            type="button"
-            className="btn-secondary"
-            onClick={() => append({ malayalam: '', english: '', arabic: '' })}
-          >
-            + Add instruction
-          </button>
-        </div>
+        <label className="label mb-1.5">Instructions</label>
         <div className="space-y-3">
           {fields.map((field, index) => (
             <div key={field.id} className="flex gap-2">
@@ -211,6 +202,13 @@ export default function RitualStepFormPage() {
             </div>
           ))}
           {fields.length === 0 && <p className="text-sm text-slate-400">No instructions yet.</p>}
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => append({ malayalam: '', english: '', arabic: '' })}
+          >
+            + Add instruction
+          </button>
         </div>
       </div>
 
