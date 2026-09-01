@@ -25,6 +25,7 @@ export default function EmergencyContactsListPage() {
         },
         { header: 'Country', cell: (item) => item.country },
         { header: 'Category', cell: (item) => <span className="badge bg-slate-100 text-slate-600">{item.category}</span> },
+        { header: 'Order', cell: (item) => <span className="text-slate-500">{item.order}</span> },
       ]}
     />
   );

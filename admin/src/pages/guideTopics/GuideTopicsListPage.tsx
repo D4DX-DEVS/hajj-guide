@@ -54,6 +54,10 @@ export default function GuideTopicsListPage() {
               <span className="text-xs text-slate-400">—</span>
             ),
         },
+        {
+          header: 'Order',
+          cell: (item) => <span className="text-slate-500">{item.order}</span>,
+        },
       ]}
       detailFields={[
         {
@@ -74,6 +78,10 @@ export default function GuideTopicsListPage() {
         {
           header: 'Category',
           cell: (item) => categoryOptions.find((o) => o.value === item.category)?.label || item.category || '—',
+        },
+        {
+          header: 'Order',
+          cell: (item) => item.order,
         },
         {
           header: 'Sessions',

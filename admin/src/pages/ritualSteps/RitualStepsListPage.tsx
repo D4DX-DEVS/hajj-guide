@@ -50,6 +50,10 @@ export default function RitualStepsListPage() {
           header: 'Category',
           cell: (item) => (item.category ? <span className="badge bg-slate-100 text-slate-600">{item.category}</span> : <span className="text-xs text-slate-400">—</span>),
         },
+        {
+          header: 'Order',
+          cell: (item) => <span className="text-slate-500">{item.order}</span>,
+        },
       ]}
       detailFields={[
         {
@@ -77,6 +81,10 @@ export default function RitualStepsListPage() {
           cell: (item) => item.category || '—',
         },
         {
+          header: 'Order',
+          cell: (item) => item.order,
+        },
+        {
           header: 'Description',
           cell: (item) =>
             item.description ? (
@@ -97,9 +105,20 @@ export default function RitualStepsListPage() {
               <ol className="list-decimal space-y-2 pl-4">
                 {item.instructions.map((instr, i) => (
                   <li key={i} className="space-y-0.5">
-                    {instr.english && <div>{instr.english}</div>}
-                    <div>{instr.malayalam}</div>
+                    {instr.english && <div className="font-medium text-slate-800">{instr.english}</div>}
+                    <div className="font-medium text-slate-800">{instr.malayalam}</div>
                     {instr.arabic && <div dir="rtl">{instr.arabic}</div>}
+                    {instr.description && (
+                      <div className="mt-1 space-y-0.5">
+                        {instr.description.english && (
+                          <div className="rte-content" dangerouslySetInnerHTML={{ __html: instr.description.english }} />
+                        )}
+                        {instr.description.malayalam && (
+                          <div className="rte-content" dangerouslySetInnerHTML={{ __html: instr.description.malayalam }} />
+                        )}
+                        {instr.description.arabic && <div dir="rtl">{instr.description.arabic}</div>}
+                      </div>
+                    )}
                   </li>
                 ))}
               </ol>

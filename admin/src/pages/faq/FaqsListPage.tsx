@@ -19,6 +19,39 @@ export default function FaqsListPage() {
             </div>
           ),
         },
+        {
+          header: 'Order',
+          cell: (item) => <span className="text-slate-500">{item.order}</span>,
+        },
+      ]}
+      detailFields={[
+        {
+          header: 'Title',
+          cell: (item) => (
+            <div className="space-y-0.5">
+              {item.title.english && <div>{item.title.english}</div>}
+              <div>{item.title.malayalam}</div>
+              {item.title.arabic && <div dir="rtl">{item.title.arabic}</div>}
+            </div>
+          ),
+        },
+        {
+          header: 'Description',
+          cell: (item) =>
+            item.description ? (
+              <div className="space-y-0.5">
+                {item.description.english && <div className="rte-content" dangerouslySetInnerHTML={{ __html: item.description.english }} />}
+                {item.description.malayalam && <div className="rte-content" dangerouslySetInnerHTML={{ __html: item.description.malayalam }} />}
+                {item.description.arabic && <div dir="rtl">{item.description.arabic}</div>}
+              </div>
+            ) : (
+              '—'
+            ),
+        },
+        {
+          header: 'Order',
+          cell: (item) => item.order,
+        },
       ]}
     />
   );
