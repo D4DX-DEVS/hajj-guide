@@ -46,6 +46,11 @@ export interface RitualStep extends ContentBase {
   duaIds: string[];
 }
 
+export interface Faq extends ContentBase {
+  title: Localized;
+  description?: Localized;
+}
+
 export interface Dua extends ContentBase {
   title: Localized;
   arabicText: string;

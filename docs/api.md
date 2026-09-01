@@ -59,6 +59,7 @@ ETags, so send `If-None-Match` and expect `304`.
 | GET | `/tawaf-duas` | 7 rounds plus `start` / `end` |
 | GET | `/sai-duas` | 7 legs |
 | GET | `/checklist-template` | Categories, each with `items[]` |
+| GET | `/faqs` | |
 | GET | `/emergency-contacts?country=&category=` | |
 | GET | `/audio?type=talbiyah\|dua\|guide` | |
 | GET | `/categories?group=` | |
@@ -247,6 +248,21 @@ routes return `{ "success": true, "data": <document> }`. Every document shares
 }
 ```
 
+### `GET /faqs`
+
+```json
+{
+  "id": "65h...",
+  "title": { "malayalam": "...", "english": "How do I perform Tawaf?" },
+  "description": { "malayalam": "<p>...</p>", "english": "<p>...</p>" },
+  "order": 0,
+  "isPublished": true,
+  "deletedAt": null,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z"
+}
+```
+
 ### `GET /emergency-contacts`
 
 ```json
@@ -325,7 +341,7 @@ routes return `{ "success": true, "data": <document> }`. Every document shares
 `changed` and `deleted` carry one key per collection — the `syncKey` from
 [api/src/content/registry.js](../api/src/content/registry.js) (`ritualSteps`,
 `duas`, `guideTopics`, `tawafDuas`, `saiDuas`, `checklistTemplate`,
-`emergencyContacts`, `audio`, `categories`). `changed[key]` holds full documents
+`emergencyContacts`, `audio`, `faqs`, `categories`). `changed[key]` holds full documents
 in the shape shown above; `deleted[key]` holds plain id strings.
 
 Omit `since` for the first launch. A document that was **unpublished** appears in
@@ -545,7 +561,7 @@ admin object shown above.
 ### Content CRUD
 
 Available for: `ritual-steps`, `duas`, `guide-topics`, `tawaf-duas`, `sai-duas`,
-`checklist-template`, `emergency-contacts`, `audio`, `categories`.
+`checklist-template`, `emergency-contacts`, `audio`, `faqs`, `categories`.
 
 | Method | Path | Notes |
 |---|---|---|
