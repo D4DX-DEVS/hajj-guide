@@ -54,7 +54,7 @@ const ritualStepSchema = z.object({
   category: optionalCategoryKey,
   title: locRequired,
   description: locOptional,
-  instructions: z.array(locRequired).optional(),
+  instructions: z.array(locRequired.extend({ description: locOptional })).optional(),
   iconEmoji: z.string().trim().optional(),
   imageSource: z.enum(['url', 'upload']).optional(),
   imageUrl: z.string().url().optional().or(z.literal('')),

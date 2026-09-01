@@ -1,6 +1,17 @@
 import mongoose from 'mongoose';
 import { contentSchema, localized, RITUAL_TYPES } from './shared.js';
 
+/** Instruction text plus an optional rich-text (HTML) description shown underneath it. */
+const instructionSchema = new mongoose.Schema(
+  {
+    malayalam: { type: String, required: true, trim: true },
+    english: { type: String, trim: true },
+    arabic: { type: String, trim: true },
+    description: { type: localized(false) },
+  },
+  { _id: false },
+);
+
 const schema = contentSchema({
   ritualType: { type: String, enum: RITUAL_TYPES, required: true, index: true },
   stepNumber: { type: Number, required: true },
@@ -8,7 +19,7 @@ const schema = contentSchema({
   category: { type: String, trim: true, lowercase: true, default: null, index: true },
   title: { type: localized(true), required: true },
   description: { type: localized(false) },
-  instructions: { type: [localized(true)], default: [] },
+  instructions: { type: [instructionSchema], default: [] },
   iconEmoji: { type: String, trim: true },
   imageSource: { type: String, enum: ['url', 'upload'], default: 'url' },
   imageUrl: { type: String, trim: true },

@@ -23,13 +23,17 @@ export type Platform = 'android' | 'ios';
 export type AdminRole = 'superadmin' | 'editor';
 export type CategoryGroup = 'dua' | 'emergency-contact' | 'ritual-step' | 'guide-topic';
 
+export interface RitualStepInstruction extends Localized {
+  description?: Localized;
+}
+
 export interface RitualStep extends ContentBase {
   ritualType: RitualType;
   stepNumber: number;
   category?: string | null;
   title: Localized;
   description?: Localized;
-  instructions: Localized[];
+  instructions: RitualStepInstruction[];
   imageSource?: 'url' | 'upload';
   imageUrl?: string;
   imageStorageKey?: string;

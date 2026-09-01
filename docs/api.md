@@ -130,7 +130,7 @@ routes return `{ "success": true, "data": <document> }`. Every document shares
   "category": "tawaf",
   "title": { "malayalam": "ത്വവാഫ്", "english": "Tawaf", "arabic": "الطواف" },
   "description": { "malayalam": "...", "english": "..." },
-  "instructions": [{ "malayalam": "...", "english": "..." }],
+  "instructions": [{ "malayalam": "...", "english": "...", "description": { "malayalam": "<p>...</p>" } }],
   "iconEmoji": "🕋",
   "imageUrl": "https://...",
   "videoUrl": "https://youtube.com/...",
