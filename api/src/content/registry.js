@@ -8,6 +8,7 @@ import {
   ChecklistTemplate,
   EmergencyContact,
   Audio,
+  Faq,
   Category,
   CATEGORY_GROUPS,
 } from '../models/index.js';
@@ -54,7 +55,7 @@ const ritualStepSchema = z.object({
   category: optionalCategoryKey,
   title: locRequired,
   description: locOptional,
-  instructions: z.array(locRequired).optional(),
+  instructions: z.array(locRequired.extend({ description: locOptional })).optional(),
   iconEmoji: z.string().trim().optional(),
   imageSource: z.enum(['url', 'upload']).optional(),
   imageUrl: z.string().url().optional().or(z.literal('')),
@@ -183,6 +184,12 @@ const audioSchema = z.object({
   linkedDuaId: objectId.nullable().optional(),
 });
 
+const faqSchema = z.object({
+  ...contentBase,
+  title: locRequired,
+  description: locOptional,
+});
+
 /* --------------------------------------------------------------- registry */
 
 /**
@@ -291,6 +298,16 @@ export const contentRegistry = [
     sort: { order: 1, createdAt: -1 },
     publicFilter: (q) => (q.type ? { type: q.type } : {}),
     searchFields: ['title.malayalam', 'title.english', 'reciter'],
+  },
+  {
+    key: 'faqs',
+    syncKey: 'faqs',
+    label: 'FAQ',
+    model: Faq,
+    schema: faqSchema,
+    sort: { order: 1, createdAt: 1 },
+    publicFilter: () => ({}),
+    searchFields: ['title.malayalam', 'title.english'],
   },
   {
     key: 'categories',

@@ -30,7 +30,7 @@ const schema = z.object({
   order: z.coerce.number().int().default(0),
   title: locRequired,
   description: locSchema.optional(),
-  instructions: z.array(locRequired),
+  instructions: z.array(locRequired.extend({ description: locSchema.optional() })),
   imageSource: z.enum(['url', 'upload']).default('url'),
   imageUrl: z.string().optional(),
   imageStorageKey: z.string().optional(),
@@ -98,7 +98,12 @@ export default function RitualStepFormPage() {
         order: item.order,
         title: item.title,
         description: item.description || { malayalam: '', english: '', arabic: '' },
-        instructions: item.instructions?.length ? item.instructions : [],
+        instructions: item.instructions?.length
+          ? item.instructions.map((instruction) => ({
+              ...instruction,
+              description: instruction.description || { malayalam: '', english: '', arabic: '' },
+            }))
+          : [],
         imageSource: item.imageSource || 'url',
         imageUrl: item.imageUrl || '',
         imageStorageKey: item.imageStorageKey || '',
@@ -192,20 +197,40 @@ export default function RitualStepFormPage() {
         <label className="label mb-1.5">Instructions</label>
         <div className="space-y-3">
           {fields.map((field, index) => (
-            <div key={field.id} className="flex gap-2">
-              <div className="flex-1">
-                <LocalizedInput label={`Step ${index + 1}`} name={`instructions.${index}`} register={register} errors={errors} />
+            <div key={field.id} className="rounded-lg border border-slate-200 p-3">
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <LocalizedInput label={`Step ${index + 1}`} name={`instructions.${index}`} register={register} errors={errors} />
+                </div>
+                <button type="button" className="btn-ghost mt-5 text-red-600" onClick={() => remove(index)}>
+                  Remove
+                </button>
               </div>
-              <button type="button" className="btn-ghost mt-5 text-red-600" onClick={() => remove(index)}>
-                Remove
-              </button>
+              <div className="mt-3">
+                <LocalizedInput
+                  label="Description"
+                  name={`instructions.${index}.description`}
+                  register={register}
+                  control={control}
+                  errors={errors}
+                  richText
+                  required={false}
+                />
+              </div>
             </div>
           ))}
           {fields.length === 0 && <p className="text-sm text-slate-400">No instructions yet.</p>}
           <button
             type="button"
             className="btn-secondary"
-            onClick={() => append({ malayalam: '', english: '', arabic: '' })}
+            onClick={() =>
+              append({
+                malayalam: '',
+                english: '',
+                arabic: '',
+                description: { malayalam: '', english: '', arabic: '' },
+              })
+            }
           >
             + Add instruction
           </button>

@@ -6,6 +6,7 @@ export { SaiDua } from './saiDua.js';
 export { ChecklistTemplate } from './checklistTemplate.js';
 export { EmergencyContact } from './emergencyContact.js';
 export { Audio } from './audio.js';
+export { Faq } from './faq.js';
 export { Category, CATEGORY_GROUPS } from './category.js';
 export { AppSettings } from './appSettings.js';
 export { ForceUpdate } from './forceUpdate.js';

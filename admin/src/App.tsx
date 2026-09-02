@@ -25,6 +25,9 @@ import ChecklistTemplateFormPage from './pages/checklist/ChecklistTemplateFormPa
 import EmergencyContactsListPage from './pages/emergencyContacts/EmergencyContactsListPage';
 import EmergencyContactFormPage from './pages/emergencyContacts/EmergencyContactFormPage';
 
+import FaqsListPage from './pages/faq/FaqsListPage';
+import FaqFormPage from './pages/faq/FaqFormPage';
+
 import AudioLibraryPage from './pages/audio/AudioLibraryPage';
 import AudioFormPage from './pages/audio/AudioFormPage';
 
@@ -71,6 +74,10 @@ export default function App() {
           <Route path="checklist-template" element={<ChecklistTemplateListPage />} />
           <Route path="checklist-template/new" element={<ChecklistTemplateFormPage />} />
           <Route path="checklist-template/:id" element={<ChecklistTemplateFormPage />} />
+
+          <Route path="faqs" element={<FaqsListPage />} />
+          <Route path="faqs/new" element={<FaqFormPage />} />
+          <Route path="faqs/:id" element={<FaqFormPage />} />
 
           <Route path="emergency-contacts" element={<EmergencyContactsListPage />} />
           <Route path="emergency-contacts/new" element={<EmergencyContactFormPage />} />

@@ -45,6 +45,10 @@ export default function DuasListPage() {
           header: 'Ritual',
           cell: (item) => <span className="text-xs text-slate-500">{item.ritualType}</span>,
         },
+        {
+          header: 'Order',
+          cell: (item) => <span className="text-slate-500">{item.order}</span>,
+        },
       ]}
       detailFields={[
         {
@@ -91,6 +95,10 @@ export default function DuasListPage() {
         {
           header: 'Ritual',
           cell: (item) => item.ritualType,
+        },
+        {
+          header: 'Order',
+          cell: (item) => item.order,
         },
       ]}
     />

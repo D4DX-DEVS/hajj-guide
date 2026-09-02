@@ -25,6 +25,10 @@ export default function ChecklistTemplateListPage() {
           header: 'Items',
           cell: (item) => <span className="text-xs text-slate-500">{item.items.length}</span>,
         },
+        {
+          header: 'Order',
+          cell: (item) => <span className="text-slate-500">{item.order}</span>,
+        },
       ]}
       detailFields={[
         {
@@ -37,6 +41,10 @@ export default function ChecklistTemplateListPage() {
               )}
             </div>
           ),
+        },
+        {
+          header: 'Order',
+          cell: (item) => item.order,
         },
         {
           header: 'Items',
