@@ -1,0 +1,42 @@
+name = "hajj-guide-api"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+[vars]
+# comma separated list of admin panel origins, or *
+CORS_ORIGINS = "http://localhost:5173"
+# Firebase project id (app-user auth). Empty -> /api/v1/me/* returns 503.
+FIREBASE_PROJECT_ID = ""
+# Optional public base URL of the R2 bucket (custom domain / r2.dev). Empty -> files are served by this Worker at /media/*.
+R2_PUBLIC_URL = ""
+ACCESS_TTL = "900"
+REFRESH_TTL = "2592000"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "hajj-guide"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "hajj-guide-media"
+
+# Secrets (not in this file): wrangler secret put JWT_SECRET / JWT_REFRESH_SECRET
+
+# Rate limits (period must be 10 or 60 seconds). Remove a block to disable that limiter.
+[[ratelimits]]
+name = "PUBLIC_LIMITER"
+namespace_id = "1001"
+simple = { limit = 60, period = 60 }
+
+[[ratelimits]]
+name = "USER_LIMITER"
+namespace_id = "1002"
+simple = { limit = 120, period = 60 }
+
+# 10 attempts / minute per IP; the old 10-per-15-min window isn't expressible here.
+[[ratelimits]]
+name = "LOGIN_LIMITER"
+namespace_id = "1003"
+simple = { limit = 10, period = 60 }

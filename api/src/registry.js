@@ -1,33 +1,30 @@
 import { z } from 'zod';
-import {
-  RitualStep,
-  Dua,
-  GuideTopic,
-  TawafDua,
-  SaiDua,
-  ChecklistTemplate,
-  EmergencyContact,
-  Audio,
-  Faq,
-  Category,
-  CATEGORY_GROUPS,
-} from '../models/index.js';
-import { RITUAL_TYPES, RITUAL_TYPES_WITH_BOTH, AUDIO_TYPES } from '../models/shared.js';
-import { SAI_DIRECTIONS } from '../models/saiDua.js';
+import { rand } from './db.js';
+import { badRequest } from './util.js';
+
+export const RITUAL_TYPES = ['hajj', 'umrah'];
+export const RITUAL_TYPES_WITH_BOTH = ['hajj', 'umrah', 'both'];
+export const AUDIO_TYPES = ['talbiyah', 'dua', 'guide'];
+export const BOOKMARK_TYPES = ['dua', 'step', 'guideTopic'];
+export const PLATFORMS = ['android', 'ios'];
+export const ADMIN_ROLES = ['superadmin', 'editor'];
+export const SAI_DIRECTIONS = ['safa-marwa', 'marwa-safa'];
+/** Which content field a category value belongs to. */
+export const CATEGORY_GROUPS = ['dua', 'emergency-contact', 'ritual-step', 'guide-topic'];
 
 /* ------------------------------------------------------------ zod helpers */
 
 export const objectId = z.string().regex(/^[0-9a-fA-F]{24}$/, 'must be a 24-char object id');
 
 /** Malayalam required, other languages optional. */
-const locRequired = z.object({
+export const locRequired = z.object({
   malayalam: z.string().trim().min(1, 'Malayalam text is required'),
   english: z.string().trim().optional(),
   arabic: z.string().trim().optional(),
 });
 
 /** Every language optional; the whole block may be omitted. */
-const locOptional = z
+export const locOptional = z
   .object({
     malayalam: z.string().trim().optional(),
     english: z.string().trim().optional(),
@@ -82,11 +79,6 @@ const duaSchema = z.object({
   audioId: objectId.nullable().optional(),
 });
 
-const guideTopicSessionSchema = z.object({
-  sessionTitle: locOptional,
-  description: locRequired,
-});
-
 const guideTopicSchema = z.object({
   ...contentBase,
   ritualType: z.enum(RITUAL_TYPES_WITH_BOTH).optional(),
@@ -98,7 +90,7 @@ const guideTopicSchema = z.object({
     .optional(),
   category: optionalCategoryKey,
   mainTitle: locRequired,
-  sessions: z.array(guideTopicSessionSchema).optional(),
+  sessions: z.array(z.object({ sessionTitle: locOptional, description: locRequired })).optional(),
   coverImageSource: z.enum(['url', 'upload']).optional(),
   coverImage: z.string().url().optional().or(z.literal('')),
   coverImageStorageKey: z.string().trim().optional(),
@@ -160,7 +152,7 @@ const emergencyContactSchema = z.object({
   name: locRequired,
   number: z.string().trim().min(2),
   description: locOptional,
-  country: z.string().trim().length(2).optional(),
+  country: z.string().trim().length(2).toUpperCase().optional(),
   category: categoryKey.optional(),
   iconEmoji: z.string().trim().optional(),
 });
@@ -192,135 +184,143 @@ const faqSchema = z.object({
 
 /* --------------------------------------------------------------- registry */
 
+const eq = (q, field, as = field) => (q[field] ? [[as, 'eq', q[field]]] : []);
+const withBoth = (q) => (q.ritualType ? [['ritualType', 'in', [q.ritualType, 'both']]] : []);
+
 /**
  * Single source of truth shared by the admin CRUD routes, the public list
  * endpoints and `GET /sync`. Adding a content type means adding one entry here.
+ *
+ * - `key`      URL segment
+ * - `coll`     D1 collection name (also the `/sync` key)
+ * - `sort`     [[field, 1|-1]]
+ * - `filter`   query params -> conditions (see db.js)
+ * - `defaults` values a new doc gets when the body omits them
+ * - `unique`   field sets that must be unique among non-deleted docs
  */
 export const contentRegistry = [
   {
     key: 'ritual-steps',
-    syncKey: 'ritualSteps',
+    coll: 'ritualSteps',
     label: 'Ritual Steps',
-    model: RitualStep,
     schema: ritualStepSchema,
-    sort: { ritualType: 1, order: 1, stepNumber: 1 },
-    publicFilter: (q) => {
-      const filter = {};
-      if (q.ritualType) filter.ritualType = q.ritualType;
-      if (q.category) filter.category = q.category;
-      return filter;
-    },
+    sort: [['ritualType', 1], ['order', 1], ['stepNumber', 1]],
+    filter: (q) => [...eq(q, 'ritualType'), ...eq(q, 'category')],
+    defaults: () => ({ category: null, instructions: [], imageSource: 'url', videoSource: 'youtube', hasTawafLink: false, hasSaiLink: false }),
+    unique: [['ritualType', 'stepNumber']],
     searchFields: ['title.malayalam', 'title.english'],
   },
   {
     key: 'duas',
-    syncKey: 'duas',
+    coll: 'duas',
     label: 'Duas',
-    model: Dua,
     schema: duaSchema,
-    sort: { order: 1, createdAt: 1 },
-    publicFilter: (q) => {
-      const filter = {};
-      // `both` duas belong to hajj *and* umrah, so never filter them out.
-      if (q.ritualType) filter.ritualType = { $in: [q.ritualType, 'both'] };
-      if (q.category) filter.category = q.category;
-      if (q.stepId) filter.ritualStepId = q.stepId;
-      return filter;
-    },
+    sort: [['order', 1], ['createdAt', 1]],
+    // `both` duas belong to hajj *and* umrah, so never filter them out.
+    filter: (q) => [...withBoth(q), ...eq(q, 'category'), ...eq(q, 'stepId', 'ritualStepId')],
+    defaults: () => ({ category: 'general', ritualType: 'both', ritualStepId: null, audioId: null }),
     searchFields: ['title.malayalam', 'title.english', 'arabicText'],
   },
   {
     key: 'guide-topics',
-    syncKey: 'guideTopics',
+    coll: 'guideTopics',
     label: 'Guide Topics',
-    model: GuideTopic,
     schema: guideTopicSchema,
-    sort: { order: 1, createdAt: 1 },
-    publicFilter: (q) => {
-      const filter = {};
-      if (q.ritualType) filter.ritualType = { $in: [q.ritualType, 'both'] };
-      if (q.category) filter.category = q.category;
-      return filter;
-    },
+    slug: true,
+    sort: [['order', 1], ['createdAt', 1]],
+    filter: (q) => [...withBoth(q), ...eq(q, 'category')],
+    defaults: () => ({
+      ritualType: 'both',
+      slug: `topic-${rand(4)}`,
+      category: null,
+      sessions: [],
+      coverImageSource: 'url',
+      videoSource: 'youtube',
+    }),
+    unique: [['slug']],
     searchFields: ['mainTitle.malayalam', 'mainTitle.english', 'slug'],
   },
   {
     key: 'tawaf-duas',
-    syncKey: 'tawafDuas',
+    coll: 'tawafDuas',
     label: 'Tawaf Duas',
-    model: TawafDua,
     schema: tawafDuaSchema,
-    sort: { order: 1 },
-    publicFilter: () => ({}),
+    sort: [['order', 1]],
+    filter: () => [],
+    defaults: () => ({ audioId: null }),
+    unique: [['roundNumber']],
     searchFields: ['roundNumber'],
   },
   {
     key: 'sai-duas',
-    syncKey: 'saiDuas',
+    coll: 'saiDuas',
     label: "Sa'i Duas",
-    model: SaiDua,
     schema: saiDuaSchema,
-    sort: { leg: 1 },
-    publicFilter: () => ({}),
+    sort: [['leg', 1]],
+    filter: () => [],
+    defaults: () => ({ audioId: null }),
+    unique: [['leg']],
     searchFields: [],
   },
   {
     key: 'checklist-template',
-    syncKey: 'checklistTemplate',
+    coll: 'checklistTemplate',
     label: 'Checklist Template',
-    model: ChecklistTemplate,
     schema: checklistTemplateSchema,
-    sort: { order: 1 },
-    publicFilter: () => ({}),
+    sort: [['order', 1]],
+    filter: () => [],
+    defaults: () => ({ categoryKey: `category-${rand(4)}`, items: [] }),
+    unique: [['categoryKey']],
+    check: (doc) => {
+      const keys = (doc.items || []).map((i) => i.key);
+      if (new Set(keys).size !== keys.length) throw badRequest('Checklist item keys must be unique within a category');
+    },
     searchFields: ['categoryKey', 'name.malayalam'],
   },
   {
     key: 'emergency-contacts',
-    syncKey: 'emergencyContacts',
+    coll: 'emergencyContacts',
     label: 'Emergency Contacts',
-    model: EmergencyContact,
     schema: emergencyContactSchema,
-    sort: { order: 1 },
-    publicFilter: (q) => {
-      const filter = {};
-      if (q.country) filter.country = q.country.toUpperCase();
-      if (q.category) filter.category = q.category;
-      return filter;
-    },
+    sort: [['order', 1]],
+    filter: (q) => [...(q.country ? [['country', 'eq', q.country.toUpperCase()]] : []), ...eq(q, 'category')],
+    defaults: () => ({ country: 'SA', category: 'other' }),
     searchFields: ['name.malayalam', 'name.english', 'number'],
   },
   {
     key: 'audio',
-    syncKey: 'audio',
+    coll: 'audio',
     label: 'Audio Library',
-    model: Audio,
     schema: audioSchema,
-    sort: { order: 1, createdAt: -1 },
-    publicFilter: (q) => (q.type ? { type: q.type } : {}),
+    sort: [['order', 1], ['createdAt', -1]],
+    filter: (q) => eq(q, 'type'),
+    defaults: () => ({ durationSeconds: 0, sizeBytes: 0, type: 'dua', linkedDuaId: null }),
     searchFields: ['title.malayalam', 'title.english', 'reciter'],
   },
   {
     key: 'faqs',
-    syncKey: 'faqs',
+    coll: 'faqs',
     label: 'FAQ',
-    model: Faq,
     schema: faqSchema,
-    sort: { order: 1, createdAt: 1 },
-    publicFilter: () => ({}),
+    sort: [['order', 1], ['createdAt', 1]],
+    filter: () => [],
+    defaults: () => ({}),
     searchFields: ['title.malayalam', 'title.english'],
   },
   {
     key: 'categories',
-    syncKey: 'categories',
+    coll: 'categories',
     label: 'Categories',
-    model: Category,
     schema: categorySchema,
-    sort: { group: 1, order: 1 },
-    publicFilter: (q) => (q.group ? { group: q.group } : {}),
+    sort: [['group', 1], ['order', 1]],
+    filter: (q) => eq(q, 'group'),
+    defaults: () => ({}),
+    unique: [['group', 'key']],
     searchFields: ['key', 'label.malayalam', 'label.english'],
   },
 ];
 
 export const registryByKey = new Map(contentRegistry.map((entry) => [entry.key, entry]));
 
-export const getEntry = (key) => registryByKey.get(key);
+/** Fields every new content doc starts with, before the entry's own defaults and the request body. */
+export const baseDefaults = () => ({ order: 0, isPublished: false, deletedAt: null });

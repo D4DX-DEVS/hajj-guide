@@ -1,137 +1,64 @@
 #!/usr/bin/env node
 /**
- * Seeds starter content. Idempotent — every document is upserted on its natural
- * key, so re-running updates instead of duplicating.
+ * Seeds starter content into D1. Idempotent — every document gets an id derived
+ * from its natural key, so re-running overwrites instead of duplicating.
  *
- *   npm run seed
- *   npm run seed -- --fresh     # deletes existing content first (never touches user data)
- *   npm run seed -- --draft     # seed everything unpublished
+ *   npm run seed -- --local                # or --remote; without either, only writes .generated/seed.sql
+ *   npm run seed -- --local --fresh        # deletes existing content first (never touches user data)
+ *   npm run seed -- --local --draft        # seed everything unpublished
  */
-import { connectDb, disconnectDb } from '../src/config/db.js';
-import {
-  RitualStep,
-  Dua,
-  GuideTopic,
-  TawafDua,
-  SaiDua,
-  ChecklistTemplate,
-  EmergencyContact,
-  Category,
-  AppSettings,
-  ForceUpdate,
-} from '../src/models/index.js';
+import { baseDefaults, registryByKey } from '../src/registry.js';
+import { put, stableId, emit } from './sql.js';
 import * as data from './seed-data.js';
 
 const args = new Set(process.argv.slice(2));
-const FRESH = args.has('--fresh');
 const PUBLISHED = !args.has('--draft');
 
+const stmts = [];
 const counts = {};
 
-async function upsert(model, filter, doc, name) {
-  // `doc` already carries the same values as `filter` (it's the seed record the
-  // filter was derived from), so a separate $setOnInsert would touch the same
-  // path twice and Mongo rejects the update with a conflict error.
-  await model.findOneAndUpdate(filter, { $set: doc }, { upsert: true, setDefaultsOnInsert: true, runValidators: true });
-  counts[name] = (counts[name] || 0) + 1;
+/** Mirrors what POST /api/admin/<key> stores: base defaults, entry defaults, then the record. */
+function add(key, naturalKey, doc) {
+  const entry = registryByKey.get(key);
+  stmts.push(put(entry.coll, { id: stableId(`${entry.coll}:${naturalKey}`), ...baseDefaults(), ...entry.defaults(), ...doc }));
+  counts[entry.coll] = (counts[entry.coll] || 0) + 1;
 }
 
-async function main() {
-  await connectDb();
-
-  if (FRESH) {
-    console.log('--fresh: clearing existing content collections (user data untouched)');
-    await Promise.all(
-      [RitualStep, Dua, GuideTopic, TawafDua, SaiDua, ChecklistTemplate, EmergencyContact].map((m) => m.deleteMany({})),
-    );
-  }
-
-  /* categories ------------------------------------------------------------ */
-  for (const category of data.categories) {
-    await upsert(Category, { group: category.group, key: category.key }, { ...category, isPublished: true }, 'categories');
-  }
-
-  /* ritual steps -------------------------------------------------------- */
-  for (const step of data.ritualSteps) {
-    await upsert(
-      RitualStep,
-      { ritualType: step.ritualType, stepNumber: step.stepNumber },
-      { ...step, isPublished: PUBLISHED },
-      'ritualSteps',
-    );
-  }
-
-  /* duas — `_step` links a dua to the step it belongs to ----------------- */
-  for (const { _step, ...dua } of data.duas) {
-    let ritualStepId = null;
-    if (_step) {
-      const step = await RitualStep.findOne(_step).select('_id').lean();
-      ritualStepId = step?._id ?? null;
-    }
-    await upsert(
-      Dua,
-      { 'title.english': dua.title.english },
-      { ...dua, ritualStepId, isPublished: PUBLISHED },
-      'duas',
-    );
-  }
-
-  /* guide topics -------------------------------------------------------- */
-  for (const topic of data.guideTopics) {
-    await upsert(GuideTopic, { slug: topic.slug }, { ...topic, isPublished: PUBLISHED }, 'guideTopics');
-  }
-
-  /* tawaf + sai --------------------------------------------------------- */
-  for (const dua of data.tawafDuas) {
-    await upsert(TawafDua, { roundNumber: dua.roundNumber }, { ...dua, isPublished: PUBLISHED }, 'tawafDuas');
-  }
-  for (const dua of data.saiDuas) {
-    await upsert(SaiDua, { leg: dua.leg }, { ...dua, isPublished: PUBLISHED }, 'saiDuas');
-  }
-
-  /* checklist ----------------------------------------------------------- */
-  for (const category of data.checklistCategories) {
-    await upsert(
-      ChecklistTemplate,
-      { categoryKey: category.categoryKey },
-      { ...category, isPublished: PUBLISHED },
-      'checklistCategories',
-    );
-  }
-
-  /* emergency contacts -------------------------------------------------- */
-  for (const contact of data.emergencyContacts) {
-    const { isPublished, ...rest } = contact;
-    await upsert(
-      EmergencyContact,
-      { number: contact.number, country: contact.country },
-      { ...rest, isPublished: isPublished === false ? false : PUBLISHED },
-      'emergencyContacts',
-    );
-  }
-
-  /* singletons ---------------------------------------------------------- */
-  await AppSettings.findOneAndUpdate(
-    { singletonKey: 'default' },
-    { $set: data.appSettings, $setOnInsert: { singletonKey: 'default' } },
-    { upsert: true, setDefaultsOnInsert: true },
-  );
-  counts.appSettings = 1;
-
-  for (const update of data.forceUpdates) {
-    await upsert(ForceUpdate, { platform: update.platform }, update, 'forceUpdate');
-  }
-
-  console.log('\nSeeded:');
-  for (const [key, value] of Object.entries(counts)) console.log(`  ${key.padEnd(20)} ${value}`);
-  console.log(`\nStatus: ${PUBLISHED ? 'published' : 'draft'}.`);
-  console.log('No audio was seeded — upload files through the admin panel, then link them to duas.');
-
-  await disconnectDb();
+if (args.has('--fresh')) {
+  console.log('--fresh: clearing existing content collections (user data untouched)');
+  const colls = ['ritual-steps', 'duas', 'guide-topics', 'tawaf-duas', 'sai-duas', 'checklist-template', 'emergency-contacts'];
+  stmts.push(`DELETE FROM docs WHERE collection IN (${colls.map((k) => `'${registryByKey.get(k).coll}'`).join(',')});`);
 }
 
-main().catch(async (err) => {
-  console.error(`\nSeed failed: ${err.message}`);
-  await disconnectDb().catch(() => {});
-  process.exit(1);
-});
+for (const c of data.categories) add('categories', `${c.group}:${c.key}`, { ...c, isPublished: true });
+
+const stepKey = (s) => `${s.ritualType}:${s.stepNumber}`;
+for (const s of data.ritualSteps) add('ritual-steps', stepKey(s), { ...s, isPublished: PUBLISHED });
+
+// `_step` links a dua to the step it belongs to.
+for (const { _step, ...dua } of data.duas) {
+  const ritualStepId = _step ? stableId(`ritualSteps:${stepKey(_step)}`) : null;
+  add('duas', dua.title.english, { ...dua, ritualStepId, isPublished: PUBLISHED });
+}
+
+for (const t of data.guideTopics) add('guide-topics', t.slug, { ...t, isPublished: PUBLISHED });
+for (const d of data.tawafDuas) add('tawaf-duas', d.roundNumber, { ...d, isPublished: PUBLISHED });
+for (const d of data.saiDuas) add('sai-duas', String(d.leg), { ...d, isPublished: PUBLISHED });
+for (const c of data.checklistCategories) add('checklist-template', c.categoryKey, { ...c, isPublished: PUBLISHED });
+
+for (const { isPublished, ...contact } of data.emergencyContacts) {
+  add('emergency-contacts', `${contact.country}:${contact.number}`, { ...contact, isPublished: isPublished === false ? false : PUBLISHED });
+}
+
+stmts.push(put('appSettings', { id: 'default', ...data.appSettings }));
+counts.appSettings = 1;
+for (const u of data.forceUpdates) {
+  stmts.push(put('forceUpdate', { id: u.platform, ...u }));
+  counts.forceUpdate = (counts.forceUpdate || 0) + 1;
+}
+
+console.log('Seeding:');
+for (const [key, value] of Object.entries(counts)) console.log(`  ${key.padEnd(20)} ${value}`);
+console.log(`Status: ${PUBLISHED ? 'published' : 'draft'}. No audio is seeded — upload through the admin panel.`);
+
+emit('seed', stmts);

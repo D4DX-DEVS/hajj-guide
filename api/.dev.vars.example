@@ -1,0 +1,2 @@
+JWT_SECRET=change_me_at_least_32_chars_long_secret
+JWT_REFRESH_SECRET=change_me_too_at_least_32_chars_long

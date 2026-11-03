@@ -1,36 +1,75 @@
 # Hajj & Umrah Guide — Backend
 
-MERN backend that owns the app's **content (CMS)** and **user data**, replacing the
+Backend that owns the app's **content (CMS)** and **user data**, replacing the
 old API, the Directus force-update record, and the content hardcoded into the
-Flutter app.
+Flutter app. Runs on **Cloudflare**: the API is a Worker (Hono) with **D1** as the
+database and **R2** for uploaded audio/images/video; the admin panel is a Pages site.
 
-Implementation of [BACKEND_PLAN.md](BACKEND_PLAN.md), phases P0–P3.
+Implementation of [BACKEND_PLAN.md](BACKEND_PLAN.md), phases P0–P3 (the plan's Express/Mongo/Spaces
+stack was replaced by Workers/D1/R2).
 
 ```
-hajj-guide-backend/
-  api/          Node 20 + Express 4 + MongoDB (this repo)
-  admin/        React + Vite CMS (not built yet)
-  docs/         API reference
+api/          Cloudflare Worker (Hono) + D1 migrations + data scripts
+admin/        React + Vite CMS (Cloudflare Pages)
+docs/         API reference
 ```
 
-## Quick start
+## Local development
 
 ```bash
 cd api
 npm install
-cp .env.example .env          # then set MONGO_URI and the two JWT secrets
-npm run seed                  # starter content, Malayalam + English
-npm run create-admin -- --email you@example.com --name "You"
-npm run dev
+cp .dev.vars.example .dev.vars        # JWT secrets for local dev
+npm run db:migrate:local
+npm run seed -- --local               # starter content, Malayalam + English
+npm run create-admin -- --local --email you@example.com --name "You"
+npm run dev                           # http://localhost:8787
 ```
 
-`GET http://localhost:4000/health` should answer `{"success":true,...}`.
-
-Generate the JWT secrets with:
+`GET /health` should answer `{"success":true,...}`. Generate real secrets with:
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 ```
+
+## Deploy to Cloudflare
+
+One-time setup (needs `npx wrangler login`):
+
+```bash
+cd api
+npx wrangler d1 create hajj-guide            # copy the database_id into wrangler.toml
+npx wrangler r2 bucket create hajj-guide-media
+npx wrangler secret put JWT_SECRET           # >= 32 random chars
+npx wrangler secret put JWT_REFRESH_SECRET
+# edit wrangler.toml [vars]: CORS_ORIGINS (admin panel URL), FIREBASE_PROJECT_ID, optionally R2_PUBLIC_URL
+npm run db:migrate:remote
+npm run seed -- --remote                     # optional starter content
+npm run create-admin -- --remote --email you@example.com --name "You"
+npm run deploy                               # prints https://hajj-guide-api.<account>.workers.dev
+```
+
+Admin panel (set `VITE_API_URL` to the Worker URL at build time):
+
+```bash
+cd admin
+npm install
+VITE_API_URL=https://hajj-guide-api.<account>.workers.dev npm run build
+npx wrangler pages deploy dist --project-name hajj-guide-admin
+```
+
+Then put the Pages URL in `CORS_ORIGINS` and redeploy the Worker, and point the Flutter app at the Worker URL.
+
+### Moving the old MongoDB data
+
+```bash
+cd api
+MONGO_URI="mongodb+srv://..." npm run migrate-mongo -- --remote
+```
+
+Copies every collection (content, users, user data, admins, audit log) into D1 keeping the original ids.
+Files already on DigitalOcean Spaces are not copied; their stored URLs keep working until you re-upload
+them through the admin panel (R2) and update the records.
 
 ## What exists
 
@@ -43,19 +82,20 @@ node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 | Account deletion | Done — App Store requirement |
 | Admin auth (JWT + refresh, bcrypt) | Done |
 | Admin CRUD for every content type | Done — list, search, soft delete, restore, reorder |
-| Media upload to Spaces | Done — needs `SPACES_*` |
+| Media upload to R2 | Done |
 | Audit log, rate limits, ETags | Done |
 | React admin panel | **Not built** — the API is ready for it |
 | Push notifications, group activity | Out of scope (P5+) |
 
 ## Environment
 
-Everything is validated by zod at boot ([api/src/config/env.js](api/src/config/env.js)) —
-a missing or malformed variable fails the process with a readable message instead
-of a runtime surprise.
+Configured in [api/wrangler.toml](api/wrangler.toml) (`[vars]`, bindings) plus two secrets
+(`JWT_SECRET`, `JWT_REFRESH_SECRET`; `api/.dev.vars` locally).
 
-Firebase and Spaces are optional. Without them the server still boots; the routes
-that need them return `503` with an explanatory message.
+- **D1** (`DB`): one `docs` table holding every collection as JSON — see [api/migrations](api/migrations).
+- **R2** (`BUCKET`): uploads. Served by the Worker at `/media/*` (Range-capable) unless `R2_PUBLIC_URL` points at a public bucket / custom domain.
+- **Firebase**: only `FIREBASE_PROJECT_ID` is needed — ID tokens are verified against Google's public keys. Empty means `/api/v1/me/*` returns `503`.
+- **Rate limits**: Workers rate-limit bindings (`PUBLIC_LIMITER`, `USER_LIMITER`, `LOGIN_LIMITER`).
 
 ## Notes
 

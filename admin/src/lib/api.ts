@@ -1,6 +1,6 @@
 import type { ApiEnvelope, ApiErrorBody, ListMeta } from './types';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787';
 
 const ACCESS_KEY = 'hajj_admin_access_token';
 const REFRESH_KEY = 'hajj_admin_refresh_token';
