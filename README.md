@@ -3,14 +3,14 @@
 Backend that owns the app's **content (CMS)** and **user data**, replacing the
 old API, the Directus force-update record, and the content hardcoded into the
 Flutter app. Runs on **Cloudflare**: the API is a Worker (Hono) with **D1** as the
-database and **R2** for uploaded audio/images/video; the admin panel is a Pages site.
+database and **R2** for uploaded audio/images/video; the admin panel is a static-assets Worker.
 
 Implementation of [BACKEND_PLAN.md](BACKEND_PLAN.md), phases P0–P3 (the plan's Express/Mongo/Spaces
 stack was replaced by Workers/D1/R2).
 
 ```
 api/          Cloudflare Worker (Hono) + D1 migrations + data scripts
-admin/        React + Vite CMS (Cloudflare Pages)
+admin/        React + Vite CMS (Cloudflare Worker, static assets)
 docs/         API reference
 ```
 
@@ -49,16 +49,16 @@ npm run create-admin -- --remote --email you@example.com --name "You"
 npm run deploy                               # prints https://hajj-guide-api.<account>.workers.dev
 ```
 
-Admin panel (set `VITE_API_URL` to the Worker URL at build time):
+Admin panel (a Worker serving static assets; set `VITE_API_URL` to the API Worker URL at build time):
 
 ```bash
 cd admin
 npm install
 VITE_API_URL=https://hajj-guide-api.<account>.workers.dev npm run build
-npx wrangler pages deploy dist --project-name hajj-guide-admin
+../api/node_modules/.bin/wrangler deploy
 ```
 
-Then put the Pages URL in `CORS_ORIGINS` and redeploy the Worker, and point the Flutter app at the Worker URL.
+Then put the admin URL in `CORS_ORIGINS` (api/wrangler.toml), redeploy the API Worker, and point the Flutter app at the API Worker URL.
 
 ### Moving the old MongoDB data
 

@@ -4,7 +4,7 @@ compatibility_date = "2025-01-01"
 
 [vars]
 # comma separated list of admin panel origins, or *
-CORS_ORIGINS = "http://localhost:5173"
+CORS_ORIGINS = "https://hajj-guide-admin.d4dx-fatwa.workers.dev,http://localhost:5173"
 # Firebase project id (app-user auth). Empty -> /api/v1/me/* returns 503.
 FIREBASE_PROJECT_ID = ""
 # Optional public base URL of the R2 bucket (custom domain / r2.dev). Empty -> files are served by this Worker at /media/*.
@@ -15,7 +15,7 @@ REFRESH_TTL = "2592000"
 [[d1_databases]]
 binding = "DB"
 database_name = "hajj-guide"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "e8a3fabe-6d06-4a2e-9f65-65d5a0882fd4"
 migrations_dir = "migrations"
 
 [[r2_buckets]]
